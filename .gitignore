@@ -1,0 +1,8 @@
+## General ##
+lib/
+target/
+
+## IDEA ##
+.idea/
+out/
+*.iml
