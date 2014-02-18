@@ -61,7 +61,6 @@
             <fileset dir="${target.dir}/classes"/>
 
             <manifest>
-                <attribute name="Main-Class" value="ru.dmitriymx.Main"/>
                 <attribute name="Build-By" value="DmitriyMX"/>
                 <attribute name="Build-Date" value="${build.time}"/>
             </manifest>
