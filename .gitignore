@@ -1,8 +1,20 @@
-## General ##
-lib/
-target/
-
 ## IDEA ##
 .idea/
 out/
 *.iml
+*.ipr
+*.iws
+
+## ECLIPSE ##
+.settings/
+bin/
+.classpath
+.project
+
+## GRADLE ##
+.gradle/
+build/
+
+## OTHER ##
+libs/
+target/
