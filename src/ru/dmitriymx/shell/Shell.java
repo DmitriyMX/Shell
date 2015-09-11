@@ -2,16 +2,13 @@ package ru.dmitriymx.shell;
 
 import jline.console.ConsoleReader;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.LinkedList;
-import java.util.logging.Formatter;
 
 /**
  * Командная оболочка
  */
 public class Shell implements Runnable {
-    private LogAgent log;
     private Thread shellThread;
     private String prompt;
     private LinkedList<IShellCommand> commandList = new LinkedList<>();
@@ -24,45 +21,8 @@ public class Shell implements Runnable {
      * @throws IOException
      */
     public Shell() throws IOException {
-        this(new LogFormatter(), null);
-    }
-
-    /**
-     * Создание командной оболочки
-     * @param logFile файл журналирования
-     * @throws IOException
-     */
-    public Shell(File logFile) throws IOException {
-        this(new LogFormatter(), logFile);
-    }
-
-    /**
-     * Создание командной оболочки
-     * @param logFormatter свой вариант форматирования вывода
-     * @throws IOException
-     */
-    public Shell(Formatter logFormatter) throws IOException {
-        this(logFormatter, null);
-    }
-
-    /**
-     * Создание командной оболочки
-     * @param logFormatter свой вариант форматирования вывода
-     * @param logFile файл журналирования
-     * @throws IOException
-     */
-    public Shell(Formatter logFormatter, File logFile) throws IOException {
         cReader = new ConsoleReader(System.in, System.out);
         cReader.setExpandEvents(false);
-        log = new LogAgent(logFormatter, new ShellConsoleHandler(this), logFile);
-    }
-
-    /**
-     * Получить объект журналирования
-     * @return
-     */
-    public LogAgent getLog() {
-        return log;
     }
 
     /**
@@ -118,7 +78,7 @@ public class Shell implements Runnable {
             shellThread.join();
             shellThread.start();
         } catch (InterruptedException e) {
-            log.severe("Shell thread exception: ", e);
+        	e.printStackTrace();
         }
     }
 
@@ -161,10 +121,16 @@ public class Shell implements Runnable {
                         continue readerLoop;
                     }
                 }
-                log.warning("Unknow command \"%s\"", commandName);
+                System.err.println(String.format("Unknow command \"%s\"", commandName));
+                try {
+					Thread.sleep(1);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
             }
         } catch (IOException e) {
-            log.severe("Shell exception:", e);
+        	System.err.println("Shell exception");
+        	e.printStackTrace();
         }
 
         cReader.removeCompleter(commandCompleter);
