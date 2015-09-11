@@ -4,23 +4,15 @@ import jline.console.completer.ArgumentCompleter;
 import jline.console.completer.Completer;
 import jline.console.completer.StringsCompleter;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+import java.util.Set;
 
 public class CommandCompleter implements Completer {
     private ArgumentCompleter.ArgumentDelimiter delimiter = new ArgumentCompleter.WhitespaceArgumentDelimiter();
-    private Map<String, IShellCommand> commandMap = new HashMap<>();
     private Completer commandNamesCompleter;
 
-    public CommandCompleter(List<IShellCommand> commandList) {
-        for (IShellCommand command : commandList) {
-            commandMap.put(command.getName(), command);
-        }
-
-        String[] commandNames = new String[commandMap.size()];
-        commandNames = commandMap.keySet().toArray(commandNames);
-        commandNamesCompleter = new StringsCompleter(commandNames);
+    public CommandCompleter(Set<String> commandList) {
+        commandNamesCompleter = new StringsCompleter(commandList);
     }
 
     @Override

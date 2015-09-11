@@ -3,7 +3,8 @@ package ru.dmitriymx.shell;
 import jline.console.ConsoleReader;
 
 import java.io.IOException;
-import java.util.LinkedList;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Командная оболочка
@@ -11,8 +12,9 @@ import java.util.LinkedList;
 public class Shell implements Runnable {
     private Thread shellThread;
     private String prompt;
-    private LinkedList<IShellCommand> commandList = new LinkedList<>();
+    private Map<String, IShellCommand> commandList = new HashMap<>();
     private CommandCompleter commandCompleter;
+    private final String[] emptyArray = new String[0];
     protected ConsoleReader cReader;
     protected boolean runned = false;
 
@@ -35,37 +37,19 @@ public class Shell implements Runnable {
 
     /**
      * Добавить команду
+     * @param commandName имя команды
      * @param command команда
      */
-    public void addCommand(IShellCommand command) {
-        commandList.add(command);
+    public void addCommand(String commandName, IShellCommand command) {
+        commandList.put(commandName.toLowerCase(), command);
     }
 
     /**
      * Удаление команды
      * @param command удаляемая команда
      */
-    public void removeCommand(IShellCommand command) {
-        commandList.remove(command);
-    }
-
-    /**
-     * Удаление команды по её имени
-     * @param commandName имя команды
-     */
-    public void removeCommand(String commandName) {
-        IShellCommand foundCmd = null;
-
-        for (IShellCommand command : commandList) {
-            if(command.getName().equalsIgnoreCase(commandName)) {
-                foundCmd = command;
-                break;
-            }
-        }
-
-        if (foundCmd != null) {
-            commandList.remove(foundCmd);
-        }
+    public void removeCommand(String commandName, IShellCommand command) {
+        commandList.remove(commandName);
     }
 
     /**
@@ -95,33 +79,35 @@ public class Shell implements Runnable {
     @Override
     public void run() {
         cReader.setPrompt(prompt);
-        commandCompleter = new CommandCompleter(commandList);
+        commandCompleter = new CommandCompleter(commandList.keySet());
         cReader.addCompleter(commandCompleter);
         Thread currentThread = Thread.currentThread();
 
         String line;
         try {
-            readerLoop:
             while (!currentThread.isInterrupted() && (line = cReader.readLine()) != null) {
                 String[] parseLine = commandCompleter.parseLine(line, cReader.getCursorBuffer().cursor).getArguments();
                 if (parseLine.length == 0) {
                     continue;
                 }
 
-                String commandName = parseLine[0];
-                for (IShellCommand command : commandList) {
-                    if (command.getName().equalsIgnoreCase(commandName)) {
-                        if (parseLine.length == 1) {
-                            command.execute(null);
-                        } else {
-                            String[] args = new String[parseLine.length - 1];
-                            System.arraycopy(parseLine, 1, args, 0, args.length);
-                            command.execute(args);
-                        }
-                        continue readerLoop;
-                    }
+                String commandName = parseLine[0].toLowerCase();
+                if (commandList.containsKey(commandName)) {
+                	IShellCommand command = commandList.get(commandName);
+
+                	if (parseLine.length == 1) {
+                		command.execute(emptyArray);
+                	} else {
+                		String[] args = new String[parseLine.length - 1];
+                        System.arraycopy(parseLine, 1, args, 0, args.length);
+                        command.execute(args);
+                	}
+
+                	continue;
                 }
+
                 System.err.println(String.format("Unknow command \"%s\"", commandName));
+
                 try {
 					Thread.sleep(1);
 				} catch (InterruptedException e) {
