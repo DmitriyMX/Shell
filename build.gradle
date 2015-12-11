@@ -12,10 +12,3 @@ repositories {
 dependencies {
     compile (['jline:jline:2.13'])
 }
-
-sourceSets {
-    main {
-        java.srcDirs      = ['src']
-        resources.srcDirs = ['resources']
-    }
-}
