@@ -18,9 +18,10 @@ public class Shell {
     private PrintStream sysOut, sysErr;
     private ShellPrintStream newErr;
     private String promt;
-    private ConsoleReader console;
+    protected ConsoleReader console;
     private CommandLoop commandLoop;
     private CommandCompleter commandCompleter;
+    protected boolean run = false;
 
     public void start() throws IOException, InterruptedException {
         overrideSysErr();
@@ -30,7 +31,7 @@ public class Shell {
         console.setPrompt(ConsoleReader.RESET_LINE + promt);
         console.addCompleter((commandCompleter = new CommandCompleter()));
         newErr.setConsoleReader(console);
-        commandLoop = new CommandLoop(console);
+        commandLoop = new CommandLoop(this);
 
         if (!commandLoop.commandMap.containsKey("exit")) {
             addCommand(new ExitCommand());
@@ -39,10 +40,11 @@ public class Shell {
         Thread loopCommandReader = new Thread(commandLoop, "Command reader loop");
         loopCommandReader.join();
         loopCommandReader.start();
+        run = true;
     }
 
     public void shutdown() {
-        commandLoop.shutdown();
+        run = false;
 
         newErr.setConsoleReader(null);
         console.shutdown();
@@ -63,6 +65,10 @@ public class Shell {
         String name = command.getName().toLowerCase();
         commandLoop.commandMap.put(name, command);
         commandCompleter.stringsCompleter.getStrings().add(name);
+    }
+
+    public boolean isRunning() {
+        return run;
     }
 
     /**

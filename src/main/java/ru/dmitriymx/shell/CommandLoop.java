@@ -16,19 +16,19 @@ public class CommandLoop implements Runnable {
     private static final String[] EMPTY_ARGS = new String[0];
     private static final String RED = Ansi.ansi().fgBright(Ansi.Color.RED).toString();
     private ConsoleReader console;
-    private boolean run;
+    private Shell shell;
     protected Map<String, Command> commandMap = new HashMap<>();
 
-    public CommandLoop(ConsoleReader consoleReader) {
-        console = consoleReader;
+    public CommandLoop( Shell shell) {
+        this.shell = shell;
+        this.console = shell.console;
     }
 
     @Override
     public void run() {
         Thread loop = Thread.currentThread();
-        run = true;
 
-        while (run && !loop.isInterrupted()) {
+        while (shell.run && !loop.isInterrupted()) {
             try {
                 String line;
                 if ((line = console.readLine()) != null) {
@@ -59,10 +59,8 @@ public class CommandLoop implements Runnable {
             // чтобы не нагружать процессор
             safeSleep(1);
         }
-    }
 
-    public void shutdown() {
-        run = false;
+        shell.run = false;
     }
 
     private void safeSleep(long millis) {

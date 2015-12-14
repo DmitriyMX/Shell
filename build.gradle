@@ -11,4 +11,5 @@ repositories {
 
 dependencies {
     compile (['jline:jline:2.13'])
+    testCompile(['junit:junit:4.12'])
 }
