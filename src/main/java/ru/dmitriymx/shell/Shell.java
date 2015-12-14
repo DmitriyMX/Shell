@@ -1,124 +1,78 @@
 package ru.dmitriymx.shell;
 
 import jline.console.ConsoleReader;
+import jline.console.completer.ArgumentCompleter;
+import ru.dmitriymx.shell.commands.Command;
+import ru.dmitriymx.shell.commands.ExitCommand;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
+import java.io.PrintStream;
 
 /**
- * Командная оболочка
+ * @author DmitriyMX <mail@dmitriymx.ru>
+ *         2015
  */
-public class Shell implements Runnable {
-    private Thread shellThread;
-    private String prompt;
-    private Map<String, IShellCommand> commandList = new HashMap<>();
+public class Shell {
+    public static final ArgumentCompleter.ArgumentDelimiter DELIMITER = new ArgumentCompleter.WhitespaceArgumentDelimiter();
+
+    private PrintStream sysOut, sysErr;
+    private ShellPrintStream newErr;
+    private String promt;
+    private ConsoleReader console;
+    private CommandLoop commandLoop;
     private CommandCompleter commandCompleter;
-    private final String[] emptyArray = new String[0];
-    protected ConsoleReader cReader;
-    protected boolean runned = false;
 
-    /**
-     * Создание командной оболочки
-     * @throws IOException
-     */
-    public Shell() throws IOException {
-        cReader = new ConsoleReader(System.in, System.out);
-        cReader.setExpandEvents(false);
+    public void start() throws IOException, InterruptedException {
+        overrideSysErr();
+
+        console = new ConsoleReader(System.in, sysErr);
+        if (promt == null) promt = ":";
+        console.setPrompt(ConsoleReader.RESET_LINE + promt);
+        console.addCompleter((commandCompleter = new CommandCompleter()));
+        newErr.setConsoleReader(console);
+        commandLoop = new CommandLoop(console);
+
+        if (!commandLoop.commandMap.containsKey("exit")) {
+            addCommand(new ExitCommand());
+        }
+
+        Thread loopCommandReader = new Thread(commandLoop, "Command reader loop");
+        loopCommandReader.join();
+        loopCommandReader.start();
     }
 
-    /**
-     * Установить текст приглашения
-     * @param prompt
-     */
-    public void setPrompt(String prompt) {
-        this.prompt = prompt;
+    public void shutdown() {
+        commandLoop.shutdown();
+
+        newErr.setConsoleReader(null);
+        console.shutdown();
+        System.setOut(sysOut);
+        System.setErr(sysErr);
     }
 
-    /**
-     * Добавить команду
-     * @param commandName имя команды
-     * @param command команда
-     */
-    public void addCommand(String commandName, IShellCommand command) {
-        commandList.put(commandName.toLowerCase(), command);
-    }
-
-    /**
-     * Удаление команды
-     * @param command удаляемая команда
-     */
-    public void removeCommand(String commandName, IShellCommand command) {
-        commandList.remove(commandName);
-    }
-
-    /**
-     * Запуск командной оболочки
-     */
-    public void start() {
-        shellThread = new Thread(this, "Shell Thread");
-        try {
-            runned = true;
-            shellThread.join();
-            shellThread.start();
-        } catch (InterruptedException e) {
-        	e.printStackTrace();
+    public void setPromt(String promt) { //FIXME коостыли!!
+        if (console == null) {
+            this.promt = promt;
+        } else {
+            console.setPrompt(ConsoleReader.RESET_LINE + promt);
         }
     }
 
-    /**
-     * Остановка командной оболочки
-     */
-    public void stop() {
-        shellThread.interrupt();
+    public void addCommand(Command command) {
+        command.setShell(this);
+        String name = command.getName().toLowerCase();
+        commandLoop.commandMap.put(name, command);
+        commandCompleter.stringsCompleter.getStrings().add(name);
     }
 
     /**
-     * Обработчик входящих комманд
+     * Подмена стандартных SysErr и SysOut
      */
-    @Override
-    public void run() {
-        cReader.setPrompt(prompt);
-        commandCompleter = new CommandCompleter(commandList.keySet());
-        cReader.addCompleter(commandCompleter);
-        Thread currentThread = Thread.currentThread();
-
-        String line;
-        try {
-            while (!currentThread.isInterrupted() && (line = cReader.readLine()) != null) {
-                String[] parseLine = commandCompleter.parseLine(line, cReader.getCursorBuffer().cursor).getArguments();
-                if (parseLine.length == 0) {
-                    continue;
-                }
-
-                String commandName = parseLine[0].toLowerCase();
-                if (commandList.containsKey(commandName)) {
-                	IShellCommand command = commandList.get(commandName);
-
-                	if (parseLine.length == 1) {
-                		command.execute(emptyArray);
-                	} else {
-                		String[] args = new String[parseLine.length - 1];
-                        System.arraycopy(parseLine, 1, args, 0, args.length);
-                        command.execute(args);
-                	}
-
-                	continue;
-                }
-
-                System.err.println(String.format("Unknow command \"%s\"", commandName));
-
-                try {
-					Thread.sleep(1);
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				}
-            }
-        } catch (IOException e) {
-        	System.err.println("Shell exception");
-        	e.printStackTrace();
-        }
-
-        cReader.removeCompleter(commandCompleter);
+    private void overrideSysErr() {
+        sysOut = System.out;
+        sysErr = System.err;
+        newErr = new ShellPrintStream(sysErr);
+        System.setErr(newErr);
+        System.setOut(newErr);
     }
 }

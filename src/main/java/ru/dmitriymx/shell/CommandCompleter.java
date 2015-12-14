@@ -5,29 +5,23 @@ import jline.console.completer.Completer;
 import jline.console.completer.StringsCompleter;
 
 import java.util.List;
-import java.util.Set;
 
+/**
+ * @author DmitriyMX <mail@dmitriymx.ru>
+ *         2015
+ */
 public class CommandCompleter implements Completer {
-    private ArgumentCompleter.ArgumentDelimiter delimiter = new ArgumentCompleter.WhitespaceArgumentDelimiter();
-    private Completer commandNamesCompleter;
-
-    public CommandCompleter(Set<String> commandList) {
-        commandNamesCompleter = new StringsCompleter(commandList);
-    }
+    protected StringsCompleter stringsCompleter = new StringsCompleter();
 
     @Override
     public int complete(String buffer, int cursor, List<CharSequence> candidates) {
-        ArgumentCompleter.ArgumentList parseCommandLine = parseLine(buffer, cursor);
-        int cursorArgument = parseCommandLine.getCursorArgumentIndex();
+        ArgumentCompleter.ArgumentList parseLine = Shell.DELIMITER.delimit(buffer, cursor);
+        int cursorArgumentIndex = parseLine.getCursorArgumentIndex();
 
-        if (cursorArgument < 0) {
+        if (cursorArgumentIndex < 0) {
             return -1;
         } else {
-            return commandNamesCompleter.complete(buffer, cursor, candidates);
+            return stringsCompleter.complete(buffer, cursor, candidates);
         }
-    }
-
-    public ArgumentCompleter.ArgumentList parseLine(String buffer, int cursor) {
-        return delimiter.delimit(buffer, cursor);
     }
 }
