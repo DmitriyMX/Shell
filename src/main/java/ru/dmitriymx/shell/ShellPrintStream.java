@@ -16,6 +16,7 @@ import java.io.PrintWriter;
 public class ShellPrintStream extends PrintStream {
     private ConsoleReader consoleReader;
     private PrintWriter writer;
+    private Formatter formatter;
 
     public ShellPrintStream(OutputStream outputStream) {
         super(outputStream, true);
@@ -29,6 +30,10 @@ public class ShellPrintStream extends PrintStream {
         }
     }
 
+    public void setFormatter(Formatter formatter) {
+        this.formatter = formatter;
+    }
+
     @Override
     public void print(String s) {
         println(s);
@@ -38,7 +43,11 @@ public class ShellPrintStream extends PrintStream {
     public void println(String s) {
         if (consoleReader != null) {
             writer.print(ConsoleReader.RESET_LINE);
-            writer.print(s);
+            if (formatter != null) {
+                writer.print(formatter.format(s));
+            } else {
+                writer.print(s);
+            }
             cleanTrashLine(s);
             writer.println();
             try {
@@ -49,7 +58,11 @@ public class ShellPrintStream extends PrintStream {
             writer.flush();
         } else {
             super.print(ConsoleReader.RESET_LINE);
-            super.print(s);
+            if (formatter != null) {
+                super.print(formatter.format(s));
+            } else {
+                super.print(s);
+            }
         }
     }
 

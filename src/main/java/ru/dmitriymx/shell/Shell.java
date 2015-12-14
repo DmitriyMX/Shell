@@ -71,6 +71,10 @@ public class Shell {
         return run;
     }
 
+    public void setFormatter(Formatter formatter) {
+        newErr.setFormatter(formatter);
+    }
+
     /**
      * Подмена стандартных SysErr и SysOut
      */
