@@ -15,7 +15,7 @@ import java.io.PrintStream;
 public class Shell {
     public static final ArgumentCompleter.ArgumentDelimiter DELIMITER = new ArgumentCompleter.WhitespaceArgumentDelimiter();
 
-    private PrintStream sysOut, sysErr;
+    private PrintStream sysErr;
     private ShellPrintStream newErr;
     private String promt;
     protected ConsoleReader console;
@@ -24,7 +24,7 @@ public class Shell {
     protected boolean run = false;
 
     public void start() throws IOException, InterruptedException {
-        overrideSysErr();
+        if (sysErr == null) overrideSysOutErr();
 
         console = new ConsoleReader(System.in, sysErr);
         if (promt == null) promt = ":";
@@ -48,8 +48,6 @@ public class Shell {
 
         newErr.setConsoleReader(null);
         console.shutdown();
-        System.setOut(sysOut);
-        System.setErr(sysErr);
     }
 
     public void setPromt(String promt) { //FIXME коостыли!!
@@ -78,8 +76,7 @@ public class Shell {
     /**
      * Подмена стандартных SysErr и SysOut
      */
-    private void overrideSysErr() {
-        sysOut = System.out;
+    public void overrideSysOutErr() {
         sysErr = System.err;
         newErr = new ShellPrintStream(sysErr);
         System.setErr(newErr);

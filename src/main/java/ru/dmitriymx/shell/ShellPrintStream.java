@@ -36,7 +36,11 @@ public class ShellPrintStream extends PrintStream {
 
     @Override
     public void print(String s) {
-        println(s);
+        if (consoleReader != null) {
+            println(s);
+        } else {
+            super.print(s);
+        }
     }
 
     @Override
@@ -57,12 +61,7 @@ public class ShellPrintStream extends PrintStream {
             }
             writer.flush();
         } else {
-            super.print(ConsoleReader.RESET_LINE);
-            if (formatter != null) {
-                super.print(formatter.format(s));
-            } else {
-                super.print(s);
-            }
+            super.println(s);
         }
     }
 
