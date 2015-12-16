@@ -1,12 +1,15 @@
 package test;
 
+import org.fusesource.jansi.Ansi;
 import org.junit.Before;
 import org.junit.Test;
+import ru.dmitriymx.shell.Formatter;
 import ru.dmitriymx.shell.Shell;
 
 import java.io.*;
 import java.util.logging.Logger;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -83,6 +86,34 @@ public class TestShell {
         assertTrue(resultOut.contains("Hello"));
         assertTrue(resultOut.contains("world"));
         assertTrue(resultOut.contains("123"));
+        assertTrue(resultOut.contains("Unknown command"));
+    }
+
+    @Test
+    public void testFormatter() throws IOException, InterruptedException {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        PrintStream shellout = new PrintStream(baos);
+        System.setOut(shellout);
+        System.setErr(shellout);
+
+        ByteArrayInputStream bais = new ByteArrayInputStream("qwe\nexit\n".getBytes());
+        System.setIn(bais);
+
+        Formatter formatter = s -> "FORMAT: [" + s + "]";
+
+        Shell shell = new Shell();
+        shell.setFormatter(formatter);
+        shell.overrideSysOutErr();
+        shell.start();
+
+        while (shell.isRunning()) {
+            Thread.sleep(1);
+        }
+
+        String resultOut = baos.toString();
+        returnSys();
+
+        assertTrue(resultOut.contains("FORMAT: ["));
         assertTrue(resultOut.contains("Unknown command"));
     }
 }

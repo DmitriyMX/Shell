@@ -21,6 +21,7 @@ public class Shell {
     protected ConsoleReader console;
     private CommandLoop commandLoop;
     private CommandCompleter commandCompleter;
+    private Formatter formatter;
     protected boolean run = false;
 
     public void start() throws IOException, InterruptedException {
@@ -70,7 +71,11 @@ public class Shell {
     }
 
     public void setFormatter(Formatter formatter) {
-        newErr.setFormatter(formatter);
+        if (newErr != null) {
+            newErr.setFormatter(formatter);
+        } else {
+            this.formatter = formatter;
+        }
     }
 
     /**
@@ -79,6 +84,7 @@ public class Shell {
     public void overrideSysOutErr() {
         sysErr = System.err;
         newErr = new ShellPrintStream(sysErr);
+        if (formatter != null) newErr.setFormatter(formatter);
         System.setErr(newErr);
         System.setOut(newErr);
     }
