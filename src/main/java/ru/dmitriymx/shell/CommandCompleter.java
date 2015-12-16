@@ -11,7 +11,7 @@ import java.util.List;
  *         2015
  */
 public class CommandCompleter implements Completer {
-    protected StringsCompleter stringsCompleter = new StringsCompleter();
+    protected StringsCompleter stringsCompleter;
 
     @Override
     public int complete(String buffer, int cursor, List<CharSequence> candidates) {

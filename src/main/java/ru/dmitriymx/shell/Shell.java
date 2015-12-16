@@ -2,11 +2,14 @@ package ru.dmitriymx.shell;
 
 import jline.console.ConsoleReader;
 import jline.console.completer.ArgumentCompleter;
+import jline.console.completer.StringsCompleter;
 import ru.dmitriymx.shell.commands.Command;
 import ru.dmitriymx.shell.commands.ExitCommand;
 
 import java.io.IOException;
 import java.io.PrintStream;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * @author DmitriyMX <mail@dmitriymx.ru>
@@ -23,6 +26,8 @@ public class Shell {
     private CommandCompleter commandCompleter;
     private Formatter formatter;
     protected boolean run = false;
+    private Map<String, Command> commandMap = new HashMap<>();
+    private StringsCompleter stringsCompleter = new StringsCompleter();
 
     public void start() throws IOException, InterruptedException {
         if (sysErr == null) overrideSysOutErr();
@@ -31,8 +36,10 @@ public class Shell {
         if (promt == null) promt = ":";
         console.setPrompt(ConsoleReader.RESET_LINE + promt);
         console.addCompleter((commandCompleter = new CommandCompleter()));
+        commandCompleter.stringsCompleter = stringsCompleter;
         newErr.setConsoleReader(console);
         commandLoop = new CommandLoop(this);
+        commandLoop.commandMap = commandMap;
 
         if (!commandLoop.commandMap.containsKey("exit")) {
             addCommand(new ExitCommand());
@@ -62,8 +69,8 @@ public class Shell {
     public void addCommand(Command command) {
         command.setShell(this);
         String name = command.getName().toLowerCase();
-        commandLoop.commandMap.put(name, command);
-        commandCompleter.stringsCompleter.getStrings().add(name);
+        commandMap.put(name, command);
+        stringsCompleter.getStrings().add(name);
     }
 
     public boolean isRunning() {
