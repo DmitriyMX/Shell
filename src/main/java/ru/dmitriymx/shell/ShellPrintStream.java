@@ -35,17 +35,10 @@ public class ShellPrintStream extends PrintStream {
     }
 
     @Override
-    public void print(String s) {
+    public void write(byte[] bytes, int off, int len) {
         if (consoleReader != null) {
-            println(s);
-        } else {
-            super.print(s);
-        }
-    }
+            String s = new String(bytes);
 
-    @Override
-    public void println(String s) {
-        if (consoleReader != null) {
             writer.print(ConsoleReader.RESET_LINE);
             if (formatter != null) {
                 writer.print(formatter.format(s));
@@ -61,7 +54,7 @@ public class ShellPrintStream extends PrintStream {
             }
             writer.flush();
         } else {
-            super.println(s);
+            super.write(bytes, off, len);
         }
     }
 
