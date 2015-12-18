@@ -34,27 +34,47 @@ public class ShellPrintStream extends PrintStream {
         this.formatter = formatter;
     }
 
+    private void _print(String s) {
+        writer.print(ConsoleReader.RESET_LINE);
+        if (formatter != null) { //TODO убрать проверку null
+            s = formatter.format(s);
+        }
+        writer.print(s);
+        cleanTrashLine(s);
+        writer.println();
+        try {
+            consoleReader.drawLine();
+        } catch (IOException e) {
+            // ignore
+        }
+        writer.flush();
+    }
+
     @Override
     public void write(byte[] bytes, int off, int len) {
         if (consoleReader != null) {
-            String s = new String(bytes);
-
-            writer.print(ConsoleReader.RESET_LINE);
-            if (formatter != null) {
-                writer.print(formatter.format(s));
-            } else {
-                writer.print(s);
-            }
-            cleanTrashLine(s);
-            writer.println();
-            try {
-                consoleReader.drawLine();
-            } catch (IOException e) {
-                // ignore
-            }
-            writer.flush();
+            if ((char)bytes[len-1] == '\n') len--; //TODO проверить в windows
+            _print(new String(bytes, off, len));
         } else {
             super.write(bytes, off, len);
+        }
+    }
+
+    @Override
+    public void print(String s) {
+        if (consoleReader != null) {
+            _print(s);
+        } else {
+            super.print(s);
+        }
+    }
+
+    @Override
+    public void println(String s) {
+        if (consoleReader != null) {
+            _print(s);
+        } else {
+            super.println(s);
         }
     }
 
